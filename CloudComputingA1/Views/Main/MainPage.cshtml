@@ -1,0 +1,259 @@
+﻿@{
+    ViewData["Title"] = "MainPage";
+}
+
+<div class="banner">
+    <h3>User Area</h3>
+</div>
+<div class="username">
+    <h1 id="head" class="display-4">hi</h1>
+</div>
+<div class="banner">
+    <h3>Subscriptions</h3>
+</div>
+<div id="data-table">
+    <table id="subs" >
+    </table>
+</div>
+<div class="banner1">
+    <h3 class="banner">Query</h3>
+</div>
+<div class="text-center">
+    <form id="query-form">
+        <label for="query-title">Title:</label><br>
+        <input type="text" id="query-title" name="title" placeholder="Title"><br>
+        <label for="query-artist">Artist:</label><br>
+        <input type="text" id="query-artist" name="artist" placeholder="Artist"><br>
+        <label for="query-year">Year:</label><br>
+        <input type="text" id="query-year" name="year" placeholder="Year"><br>
+        <div class="button">
+            <button type="submit" onclick="getQuery()">Search</button>
+        </div>
+    </form>
+</div>
+<div id="data-table1">
+    <p id="l"></p>
+    <table id="queries" ></table>
+</div>
+
+<script>
+    document.getElementById("head").innerHTML = sessionStorage.getItem("user_name");
+    const email = sessionStorage.email;
+    var object = { "email": email };
+    input = JSON.stringify(object);
+    console.log(input);
+
+    async function getSubs() {
+        const url = "https://81wawzuv1e.execute-api.us-east-1.amazonaws.com/default/SUBSCRIPTIONS";
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+            },
+            body: input,
+        });
+        const status = await response.status;
+        const body = await response.body;
+        if (status === 200) {
+            const json = await response.json();
+
+            const imageURL = "https://81wawzuv1e.execute-api.us-east-1.amazonaws.com/default/IMAGES";
+
+
+            let li = `<tr><th>Title</th><th>Artist</th><th>Year</th><th>Artist Image</th><th>Action</th></tr>`;
+            json.forEach(async (song) => {
+                var imageObject = { "title": song.title };
+                image_input = JSON.stringify(imageObject);
+                const imageResponse = await fetch(imageURL, {
+                    method: "POST",
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    body: image_input,
+                });
+                const imageBytes = await imageResponse.blob();
+                const b = await imageBytes.text();
+                console.log(b);
+                const img = "data: image/png;base64, ".concat(b);
+                const button_name = song.title.concat("-button");
+
+                const d = song.title.replaceAll(" ", "");
+                const id = d.replace("'", '');
+
+
+                console.log(song.title);
+                const dataString= await `<tr id=\"${id}\">
+                <td>${song.title}</td>
+                <td>${song.artist} </td>
+                <td>${song.year}</td>
+                <td><img src =\"${img}\" width=\"75\"</td>
+                <td><input id=\"${button_name}" type=\"button\" onclick=\"deleteRow(${id})\" value=\"Remove\"</td>
+              </tr>`;
+                li += dataString;
+                document.getElementById("subs").innerHTML = await li;
+
+                sessionStorage.setItem(id, song.title);
+            });
+            return true;
+        }
+        else {
+            let li = `<tr><th>Title</th><th>Artist</th><th>Year</th><th>Artist Image</th><th>Action</th></tr>`;
+            link.style.display = 'none';
+            document.getElementById("data-table").appendChild(document.createTextNode("Sorry, You aren\'t subscribed to anything"));
+            location.reload();
+            return false;
+        }
+
+    }
+
+    function isTableVisible() {
+        return false;
+    }
+
+    getSubs();
+
+    function deleteRow(title) {
+        var row = document.getElementById(title.id.trim());
+        row.parentNode.removeChild(row);
+
+        const name = title.id
+        const song_name = sessionStorage.getItem(name)
+
+        var object = {
+            "email": sessionStorage.getItem("email"),
+            "title": song_name
+        };
+
+        const json = JSON.stringify(object);
+
+        fetch("https://ufms984wki.execute-api.us-east-1.amazonaws.com/default/deleteSubscription", {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+            },
+            body: json,
+        });
+    }
+    
+
+    async function getQuery() {
+        const form = document.getElementById("query-form");
+        console.log(form);
+
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const payload = new FormData(form);
+            console.log(...payload);
+
+            var object = {};
+            payload.forEach((value, key) => object[key] = value);
+            var json = JSON.stringify(object);
+            console.log(json);
+
+            const url = "https://81wawzuv1e.execute-api.us-east-1.amazonaws.com/default/QUERY";
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    'Accept': 'application/json',
+                },
+                body: json,
+            });
+            const status = await response.status;
+            const body = await response.body;
+
+            if (status === 200) {
+                const json = await response.json();
+
+                const imageURL = "https://81wawzuv1e.execute-api.us-east-1.amazonaws.com/default/IMAGES";
+
+
+                let li = `<tr><th>Title</th><th>Artist</th><th>Year</th><th>Artist Image</th><th>Action</th></tr>`;
+                json.forEach(async (song) => {
+                    var imageObject = { "title": song.title };
+                    image_input = JSON.stringify(imageObject);
+                    const imageResponse = await fetch(imageURL, {
+                        method: "POST",
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                        body: image_input,
+                    });
+                    const imageBytes = await imageResponse.blob();
+                    const b = await imageBytes.text();
+                    console.log(b);
+                    const img = "data: image/png;base64, ".concat(b);
+                 
+
+                    const id = song.title.replaceAll(/\s/g, '');
+                    
+                    const s = id.replace("'", '');
+                    const st = s.concat("1");
+                    const button_name = st.concat("-button");
+
+
+
+                    console.log(song.title);
+                    const dataString = await `<tr id=\"${st}\">
+                <td>${song.title}</td>
+                <td>${song.artist} </td>
+                <td>${song.year}</td>
+                <td><img src =\"${img}\" width=\"75\"</td>
+                <td><input id=\"${button_name}" type=\"button\" onclick=\"moveSub(${st})\" value=\"Subscribe\"</td>
+              </tr>`;
+                    li += dataString;
+                    console.log("ST IS: " + st);
+
+                    sessionStorage.setItem(st.concat("1"), song.title)
+
+                    sessionStorage.setItem(st, dataString);
+                    sessionStorage.setItem("st", st);
+                    document.getElementById("queries").innerHTML = await li;
+                });
+                return true;
+            }
+            else {
+                let li = `<tr><th>Title</th><th>Artist</th><th>Year</th><th>Artist Image</th><th>Action</th></tr>`;
+                document.getElementById("queries").innerHTML = await li;
+                var link = document.getElementById('queries');
+                //link.style.display = 'none';
+                //document.getElementById("data-table1").appendChild(document.createTextNode("Sorry, no result found"));
+                document.getElementById("data-table1").innerHTML = "No result is retrieved. Please query again.";
+                return false;
+            }
+           
+        });
+    }
+
+    function moveSub(title) {
+        //console.log(sessionStorage.getItem())
+        var row = document.getElementById(title.id.trim());
+        row.parentNode.removeChild(row);
+        const li = sessionStorage.getItem(title.id);
+        const name = title.id.concat("1")
+        const song_name = sessionStorage.getItem(name)
+
+        const ming = li.replace("Subscribe", "Remove");
+        const ding = ming.replace("moveSub", "deleteRow");
+        console.log(li);
+        document.getElementById("subs").innerHTML += ding;
+
+        var object = {
+            "email": sessionStorage.getItem("email"),
+            "title": song_name
+        };
+
+        const json = JSON.stringify(object);
+
+        fetch("https://ufms984wki.execute-api.us-east-1.amazonaws.com/default/addSubscription", {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+            },
+            body: json,
+        });
+    }
+   
+
+    </script>

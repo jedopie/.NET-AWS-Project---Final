@@ -1,0 +1,27 @@
+﻿@{
+    ViewData["Title"] = "Privacy Policy";
+}
+<h1>@ViewData["Title"]</h1>
+
+<img id="img" src="">
+
+<p>Use this page to detail your site's privacy policy.</p>
+
+@*<script>
+    fetch('https://otqv87ky2m.execute-api.us-east-1.amazonaws.com/default/images', {
+    })
+
+        .then(response => response.blob())
+
+        .then(async blob => {
+            const c = await blob.text();
+            const r = atob(c);
+            console.log(c);
+
+            document.getElementById("img").src = "data:image/png;base64, ".concat(c);
+
+            
+
+        });
+</script>*@
+
